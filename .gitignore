@@ -1,0 +1,8 @@
+.venv
+.vscode
+
+# Estos archivos no tienen que ser revelados en la publicación 
+.env
+
+# retiro de los archivos que se generan por cache
+__pycache__
