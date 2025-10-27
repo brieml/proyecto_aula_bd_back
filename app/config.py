@@ -2,35 +2,35 @@ import os
 from dotenv import load_dotenv
 from datetime import timedelta
 
-# Cargar variables de entorno desde el archivo .env
 load_dotenv()
 
 class Config:
-    """Configuración base."""
-    SECRET_KEY = os.environ.get('SECRET_KEY')
-    JWT_KEY_SECRET = os.environ.get('JWT_KEY_SECRET')
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'qAZIulyLjwe9mxqM667wRboLpn3alWYZ'
     JWT_LEEWAY = 10
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1) # El token de acceso dura 1 hora
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30) # El token de refresco dura 30 días
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    TESTING = True
+    
+    # CONEXIÓN PARA PLANETSCALE
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL and DATABASE_URL.startswith('mysql://'):
+        DATABASE_URL = DATABASE_URL.replace('mysql://', 'mysql+pymysql://', 1)
+    
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL or os.environ.get('DATABASE_URL')
+    
+    # SSL para PlanetScale
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "connect_args": {
+            "ssl": {
+                "ssl_ca": "/etc/ssl/cert.pem"
+            }
+        }
+    }
 
 class DevelopmentConfig(Config):
-    """Configuración de desarrollo."""
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     DEBUG = True
 
-class TestingConfig(Config):
-    """Configuración de testing."""
-    TESTING = True
-    # Usar una base de datos en memoria para las pruebas
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-
-
 config = {
-    'real': Config,
     'development': DevelopmentConfig,
-    'testing': TestingConfig,
     'default': DevelopmentConfig
 }
